@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THETA Demo - Trading Performance System</title>
+  <meta name="description" content="THETA - The ultimate trading performance and life management system. Demo version.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Θ</text></svg>">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icons
+    const Icons = {
+      dashboard: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>,
+      trading: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-6" style={{strokeLinecap:'round'}}/></svg>,
+      calendar: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>,
+      health: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>,
+      finance: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><circle cx="12" cy="12" r="9"/><path d="M12 6v12M9 9h6M9 15h4"/></svg>,
+      tasks: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l2 2 4-4" style={{strokeLinecap:'round'}}/></svg>,
+      brain: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/><path d="M9 21h6"/></svg>,
+      check: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:2}}><path d="M5 12l5 5L20 7" style={{strokeLinecap:'round',strokeLinejoin:'round'}}/></svg>,
+      discord: () => <svg viewBox="0 0 24 24" style={{fill:'currentColor'}}><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>,
+      youtube: () => <svg viewBox="0 0 24 24" style={{fill:'currentColor'}}><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>,
+      zap: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+      lock: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
+      resources: () => <svg viewBox="0 0 24 24" style={{fill:'none',stroke:'currentColor',strokeWidth:1.5}}><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>,
+    };
+
+    const Icon = ({ name, size = 'md' }) => {
+      const IconComponent = Icons[name];
+      const sizes = { sm: 14, md: 18, lg: 24 };
+      return <span style={{ width: sizes[size], height: sizes[size], display: 'inline-flex' }}>{IconComponent ? <IconComponent /> : null}</span>;
+    };
+
+    // Demo Data
+    const DEMO = {
+      trades: [
+        { id: 1, date: '2026-02-06', time: '09:45', symbol: 'NQ', dir: 'LONG', session: 'NY', strategy: 'ORB', outcome: 'TP', pnl: 850, rr: '2.1:1', emotion: 'confident', tags: ['breakout', 'clean'] },
+        { id: 2, date: '2026-02-05', time: '15:30', symbol: 'NQ', dir: 'SHORT', session: 'NY', strategy: 'FVG', outcome: 'TP', pnl: 620, rr: '1.8:1', emotion: 'calm', tags: ['reversal'] },
+        { id: 3, date: '2026-02-05', time: '10:15', symbol: 'NQ', dir: 'LONG', session: 'NY', strategy: 'ICT', outcome: 'SL', pnl: -400, rr: '0:1', emotion: 'anxious', tags: ['fomo'] },
+        { id: 4, date: '2026-02-04', time: '14:20', symbol: 'NQ', dir: 'LONG', session: 'NY', strategy: 'ORB', outcome: 'TP', pnl: 1200, rr: '3:1', emotion: 'confident', tags: ['A+', 'trend'] },
+        { id: 5, date: '2026-02-04', time: '09:35', symbol: 'NQ', dir: 'SHORT', session: 'NY', strategy: 'FVG', outcome: 'TP', pnl: 480, rr: '1.5:1', emotion: 'calm', tags: ['clean'] },
+        { id: 6, date: '2026-02-03', time: '16:00', symbol: 'NQ', dir: 'LONG', session: 'NY', strategy: 'ICT', outcome: 'BE', pnl: 0, rr: '0:0', emotion: 'frustrated', tags: ['chop'] },
+        { id: 7, date: '2026-02-03', time: '10:30', symbol: 'NQ', dir: 'LONG', session: 'NY', strategy: 'ORB', outcome: 'TP', pnl: 950, rr: '2.4:1', emotion: 'confident', tags: ['momentum'] },
+      ],
+      habits: [
+        { id: 1, name: 'Morning Routine', icon: '☀️', done: true, streak: 23 },
+        { id: 2, name: 'Journaling', icon: '📝', done: true, streak: 45 },
+        { id: 3, name: 'Workout', icon: '💪', done: false, streak: 12 },
+        { id: 4, name: 'Read 30min', icon: '📚', done: true, streak: 8 },
+        { id: 5, name: 'No Social', icon: '📵', done: true, streak: 5 },
+      ],
+      behaviors: [
+        { id: 1, label: 'Wait for confirmation', checked: true },
+        { id: 2, label: 'Check higher timeframe', checked: true },
+        { id: 3, label: 'Risk max 1% per trade', checked: true },
+        { id: 4, label: 'No revenge trading', checked: false },
+        { id: 5, label: 'Journal every trade', checked: true },
+      ],
+      checklist: [
+        { id: 1, label: 'Review market bias', checked: true },
+        { id: 2, label: 'Check economic calendar', checked: true },
+        { id: 3, label: 'Set alerts on key levels', checked: false },
+        { id: 4, label: 'Pre-market analysis done', checked: true },
+      ],
+      tricks: [
+        { id: 1, name: 'FVG su livello chiave', description: 'Quando un FVG si forma su un livello S/R, probabilità +30%', tags: ['FVG', 'levels'] },
+        { id: 2, name: 'ORB dopo news', description: 'Non tradare ORB nei primi 15 min dopo news. Aspettare retest.', tags: ['ORB', 'news'] },
+        { id: 3, name: 'Volume spike = exit', description: 'Volume 3x media = considerare uscita parziale', tags: ['volume', 'exit'] },
+      ],
+      health: { readiness: 82, sleep: 78, activity: 85, hrv: 45 },
+      automation: {
+        discord: { members: 1247, engagement: 78 },
+        youtube: { subscribers: 8900, videos: 156 },
+        whop: { members: 342, mrr: 8550 }
+      },
+      resources: [
+        { id: 1, name: 'ICT Mentorship Notes', category: 'Trading', tags: ['ICT', 'SMC'] },
+        { id: 2, name: 'Risk Management Guide', category: 'Trading', tags: ['risk', 'sizing'] },
+        { id: 3, name: 'Trading Psychology Book', category: 'Books', tags: ['mindset'] },
+      ]
+    };
+
+    function App() {
+      const [section, setSection] = useState('dashboard');
+      const [tradingTab, setTradingTab] = useState('journal');
+      const [time, setTime] = useState(new Date());
+      const [toast, setToast] = useState(false);
+
+      useEffect(() => {
+        const t = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(t);
+      }, []);
+
+      const showToast = () => { setToast(true); setTimeout(() => setToast(false), 2000); };
+
+      const totalPnl = DEMO.trades.reduce((s, t) => s + t.pnl, 0);
+      const winRate = Math.round((DEMO.trades.filter(t => t.pnl > 0).length / DEMO.trades.length) * 100);
+      const todayPnl = DEMO.trades.filter(t => t.date === '2026-02-06').reduce((s, t) => s + t.pnl, 0);
+
+      const nav = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { id: 'trading', label: 'Trading', icon: 'trading' },
+        { id: 'tasks', label: 'Tasks', icon: 'tasks' },
+        { id: 'health', label: 'Health', icon: 'health' },
+        { id: 'finance', label: 'Finance', icon: 'finance' },
+        { id: 'resources', label: 'Resources', icon: 'resources' },
+        { id: 'automation', label: 'Automation', icon: 'zap' },
+      ];
+
+      const Card = ({ children, style = {}, onClick }) => (
+        <div onClick={onClick} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.1)', ...style }}>{children}</div>
+      );
+
+      return (
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+          {/* Banner */}
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'linear-gradient(90deg, #8b5cf6, #6366f1)', padding: '10px', textAlign: 'center', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Icon name="lock" size="sm" />
+            <span style={{ fontWeight: 600 }}>THETA DEMO</span>
+            <span style={{ opacity: 0.8 }}>— Read Only • Dati dimostrativi</span>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ width: '200px', background: 'rgba(0,0,0,0.3)', borderRight: '1px solid rgba(255,255,255,0.1)', padding: '60px 12px 20px', position: 'fixed', height: '100vh' }}>
+            <div style={{ marginBottom: '24px', padding: '0 8px' }}>
+              <div style={{ fontSize: '28px', fontWeight: 700, background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>THETA</div>
+              <div style={{ fontSize: '11px', color: '#71717a' }}>v8.0 • Pioneer</div>
+            </div>
+            {nav.map(item => (
+              <div key={item.id} onClick={() => setSection(item.id)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', marginBottom: '4px', background: section === item.id ? 'rgba(139,92,246,0.2)' : 'transparent', color: section === item.id ? '#a78bfa' : '#a1a1aa' }}>
+                <Icon name={item.icon} size="sm" />
+                <span style={{ fontSize: '14px' }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Main */}
+          <div style={{ flex: 1, marginLeft: '200px', padding: '60px 24px 24px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div style={{ fontSize: '24px', fontWeight: 700, textTransform: 'capitalize' }}>{section}</div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '14px', color: '#71717a' }}>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                <div style={{ fontSize: '20px', fontWeight: 600, fontFamily: 'monospace' }}>{time.toLocaleTimeString()}</div>
+              </div>
+            </div>
+
+            {/* Dashboard */}
+            {section === 'dashboard' && (<div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[{ l: 'Today P&L', v: `+$${todayPnl}`, c: '#22c55e' }, { l: 'Win Rate', v: `${winRate}%`, c: '#8b5cf6' }, { l: 'Readiness', v: `${DEMO.health.readiness}%`, c: '#22c55e' }, { l: 'Total P&L', v: `+$${totalPnl.toLocaleString()}`, c: '#22c55e' }].map(m => (
+                  <Card key={m.l}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '4px' }}>{m.l}</div><div style={{ fontSize: '24px', fontWeight: 700, color: m.c, fontFamily: 'monospace' }}>{m.v}</div></Card>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <Card>
+                  <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icon name="brain" size="sm" /> Trading Behaviors</div>
+                  {DEMO.behaviors.map(b => (
+                    <div key={b.id} onClick={showToast} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '6px', marginBottom: '4px', cursor: 'pointer', background: b.checked ? 'rgba(34,197,94,0.1)' : 'transparent' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: `2px solid ${b.checked ? '#22c55e' : '#52525b'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: b.checked ? '#22c55e' : 'transparent' }}>{b.checked && <Icon name="check" size="sm" />}</div>
+                      <span style={{ fontSize: '13px', color: b.checked ? '#e4e4e7' : '#a1a1aa' }}>{b.label}</span>
+                    </div>
+                  ))}
+                </Card>
+                <Card>
+                  <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icon name="check" size="sm" /> Daily Checklist</div>
+                  {DEMO.checklist.map(c => (
+                    <div key={c.id} onClick={showToast} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '6px', marginBottom: '4px', cursor: 'pointer', background: c.checked ? 'rgba(139,92,246,0.1)' : 'transparent' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: `2px solid ${c.checked ? '#8b5cf6' : '#52525b'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.checked ? '#8b5cf6' : 'transparent' }}>{c.checked && <Icon name="check" size="sm" />}</div>
+                      <span style={{ fontSize: '13px', color: c.checked ? '#e4e4e7' : '#a1a1aa' }}>{c.label}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+              <Card>
+                <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>Daily Habits</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {DEMO.habits.map(h => (
+                    <div key={h.id} onClick={showToast} style={{ padding: '12px 16px', borderRadius: '10px', background: h.done ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${h.done ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', minWidth: '110px' }}>
+                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{h.icon}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500 }}>{h.name}</div>
+                      <div style={{ fontSize: '11px', color: '#22c55e', marginTop: '4px' }}>🔥 {h.streak}d</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>)}
+
+            {/* Trading */}
+            {section === 'trading' && (<div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                {['journal', 'analytics', 'tricks'].map(tab => (
+                  <button key={tab} onClick={() => setTradingTab(tab)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: tradingTab === tab ? '#8b5cf6' : 'rgba(255,255,255,0.05)', color: tradingTab === tab ? 'white' : '#a1a1aa', cursor: 'pointer', fontSize: '13px', fontWeight: 500, textTransform: 'capitalize' }}>{tab}</button>
+                ))}
+              </div>
+              {tradingTab === 'journal' && (<div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '14px', color: '#71717a' }}>{DEMO.trades.length} trades</span>
+                  <button onClick={showToast} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', cursor: 'pointer', fontSize: '13px' }}>+ New Trade</button>
+                </div>
+                {DEMO.trades.map(t => (
+                  <Card key={t.id} onClick={showToast} style={{ marginBottom: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 600 }}>{t.symbol}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', background: t.dir === 'LONG' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', color: t.dir === 'LONG' ? '#22c55e' : '#ef4444' }}>{t.dir}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>{t.strategy}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#71717a' }}>{t.date} • {t.time} • {t.session}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: t.pnl >= 0 ? '#22c55e' : '#ef4444', fontFamily: 'monospace' }}>{t.pnl >= 0 ? '+' : ''}${t.pnl}</div>
+                      <div style={{ fontSize: '11px', color: '#71717a' }}>{t.rr}</div>
+                    </div>
+                  </Card>
+                ))}
+              </div>)}
+              {tradingTab === 'analytics' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  {[{ l: 'Total P&L', v: `+$${totalPnl.toLocaleString()}`, c: '#22c55e' }, { l: 'Win Rate', v: `${winRate}%`, c: '#8b5cf6' }, { l: 'Trades', v: DEMO.trades.length, c: '#e4e4e7' }, { l: 'Avg Trade', v: `$${Math.round(totalPnl / DEMO.trades.length)}`, c: '#e4e4e7' }].map(s => (
+                    <Card key={s.l} style={{ textAlign: 'center', padding: '20px' }}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>{s.l}</div><div style={{ fontSize: '28px', fontWeight: 700, color: s.c, fontFamily: 'monospace' }}>{s.v}</div></Card>
+                  ))}
+                </div>
+              )}
+              {tradingTab === 'tricks' && (<div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div><div style={{ fontWeight: 600 }}>Trading Tricks</div><div style={{ fontSize: '12px', color: '#71717a' }}>Pattern e setup</div></div>
+                  <button onClick={showToast} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', cursor: 'pointer', fontSize: '13px' }}>+ New Trick</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                  {DEMO.tricks.map(trick => (
+                    <Card key={trick.id} onClick={showToast} style={{ cursor: 'pointer' }}>
+                      <div style={{ fontWeight: 600, marginBottom: '8px' }}>{trick.name}</div>
+                      <div style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '12px' }}>{trick.description}</div>
+                      <div style={{ display: 'flex', gap: '6px' }}>{trick.tags.map(tag => (<span key={tag} style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '10px', background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>{tag}</span>))}</div>
+                    </Card>
+                  ))}
+                </div>
+                <Card style={{ background: 'linear-gradient(145deg, rgba(139,92,246,0.1), transparent)', borderColor: 'rgba(139,92,246,0.3)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(139,92,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="brain" size="md" /></div>
+                    <div style={{ flex: 1 }}><div style={{ fontWeight: 600 }}>AI Pattern Analyzer</div><div style={{ fontSize: '12px', color: '#71717a' }}>Confronta tricks con Journal e Backtest</div></div>
+                    <button onClick={showToast} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', cursor: 'pointer', fontSize: '13px' }}>Analizza Pattern</button>
+                  </div>
+                </Card>
+              </div>)}
+            </div>)}
+
+            {/* Health */}
+            {section === 'health' && (<div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[{ l: 'Readiness', v: DEMO.health.readiness, c: '#22c55e' }, { l: 'Sleep', v: DEMO.health.sleep, c: '#06b6d4' }, { l: 'Activity', v: DEMO.health.activity, c: '#f59e0b' }, { l: 'HRV', v: DEMO.health.hrv, u: 'ms', c: '#8b5cf6' }].map(m => (
+                  <Card key={m.l} style={{ padding: '20px' }}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>{m.l}</div><div style={{ fontSize: '32px', fontWeight: 700, color: m.c }}>{m.v}{m.u || '%'}</div></Card>
+                ))}
+              </div>
+              <Card><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#22c55e' }}>●</span><span style={{ fontSize: '14px', fontWeight: 500 }}>Connected to Oura Ring</span></div><div style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '8px' }}>Stress: <span style={{ color: '#22c55e' }}>Low</span> • Last sync: 2 min ago</div></Card>
+            </div>)}
+
+            {/* Finance */}
+            {section === 'finance' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <Card style={{ padding: '20px' }}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>Trading P&L (MTD)</div><div style={{ fontSize: '28px', fontWeight: 700, color: '#22c55e', fontFamily: 'monospace' }}>+$24,850</div></Card>
+                <Card style={{ padding: '20px' }}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>Monthly Expenses</div><div style={{ fontSize: '28px', fontWeight: 700, color: '#ef4444', fontFamily: 'monospace' }}>-$3,200</div></Card>
+                <Card style={{ padding: '20px' }}><div style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>Savings</div><div style={{ fontSize: '28px', fontWeight: 700, color: '#8b5cf6', fontFamily: 'monospace' }}>$15,000</div></Card>
+              </div>
+            )}
+
+            {/* Resources */}
+            {section === 'resources' && (<div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontSize: '14px', color: '#71717a' }}>{DEMO.resources.length} resources</span>
+                <button onClick={showToast} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', cursor: 'pointer', fontSize: '13px' }}>+ New Resource</button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {DEMO.resources.map(r => (
+                  <Card key={r.id} onClick={showToast} style={{ cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '10px', background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}>{r.category}</span></div>
+                    <div style={{ fontWeight: 600, marginBottom: '12px' }}>{r.name}</div>
+                    <div style={{ display: 'flex', gap: '6px' }}>{r.tags.map(tag => (<span key={tag} style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '9px', background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>{tag}</span>))}</div>
+                  </Card>
+                ))}
+              </div>
+            </div>)}
+
+            {/* Tasks */}
+            {section === 'tasks' && (<Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}><div style={{ fontWeight: 600 }}>Today's Tasks</div><button onClick={showToast} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: 'white', cursor: 'pointer', fontSize: '13px' }}>+ Add Task</button></div>
+              {[{ title: 'Review weekly P&L', urgent: true, done: true }, { title: 'Update trading journal', urgent: false, done: true }, { title: 'Prepare market bias for tomorrow', urgent: true, done: false }, { title: 'Record trade recap video', urgent: false, done: false }].map((t, i) => (
+                <div key={i} onClick={showToast} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '8px', marginBottom: '8px', background: t.done ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${t.done ? '#22c55e' : '#52525b'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.done ? '#22c55e' : 'transparent' }}>{t.done && <Icon name="check" size="sm" />}</div>
+                  <span style={{ flex: 1, textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.6 : 1 }}>{t.title}</span>
+                  {t.urgent && <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>Urgent</span>}
+                </div>
+              ))}
+            </Card>)}
+
+            {/* Automation */}
+            {section === 'automation' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {[
+                  { name: 'Discord', icon: 'discord', color: '#5865F2', m1: { v: DEMO.automation.discord.members.toLocaleString(), l: 'Members' }, m2: { v: `${DEMO.automation.discord.engagement}%`, l: 'Engagement', c: '#22c55e' } },
+                  { name: 'YouTube', icon: 'youtube', color: '#FF0000', m1: { v: DEMO.automation.youtube.subscribers.toLocaleString(), l: 'Subscribers' }, m2: { v: DEMO.automation.youtube.videos, l: 'Videos', c: '#8b5cf6' } },
+                  { name: 'Whop', icon: 'trading', color: '#8b5cf6', m1: { v: DEMO.automation.whop.members, l: 'Members' }, m2: { v: `$${DEMO.automation.whop.mrr.toLocaleString()}`, l: 'MRR', c: '#22c55e' } },
+                ].map(p => (
+                  <Card key={p.name} style={{ borderColor: `${p.color}33` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: p.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><Icon name={p.icon} size="md" /></div>
+                      <div><div style={{ fontWeight: 600 }}>{p.name}</div><div style={{ fontSize: '11px', color: '#22c55e' }}>Connected</div></div>
+                      <span style={{ marginLeft: 'auto', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>Active</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}><div style={{ fontSize: '20px', fontWeight: 700 }}>{p.m1.v}</div><div style={{ fontSize: '11px', color: '#71717a' }}>{p.m1.l}</div></div>
+                      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}><div style={{ fontSize: '20px', fontWeight: 700, color: p.m2.c }}>{p.m2.v}</div><div style={{ fontSize: '11px', color: '#71717a' }}>{p.m2.l}</div></div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Toast */}
+          {toast && (<div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50)', background: 'rgba(0,0,0,0.9)', padding: '12px 24px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 1000, border: '1px solid rgba(139,92,246,0.3)' }}><Icon name="lock" size="sm" /><span>Demo Mode — Read Only</span></div>)}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
